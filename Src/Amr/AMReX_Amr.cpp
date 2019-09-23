@@ -866,6 +866,137 @@ Amr::okToContinue () noexcept
 }
 
 void
+ Amr::writePlotFileSlice ()
+{
+    if ( ! Plot_Files_Output()) {
+      return;
+    }
+
+    BL_PROFILE_REGION_START("Amr::writePlotFileSlice()");
+    BL_PROFILE("Amr::writePlotFileSlice()");
+
+    VisMF::SetNOutFiles(plot_nfiles);
+    VisMF::Header::Version currentVersion(VisMF::GetHeaderVersion());
+    VisMF::SetHeaderVersion(plot_headerversion);
+
+    if (first_plotfile) {
+        first_plotfile = false;
+        amr_level[0]->setPlotVariables();
+    }
+
+    // Don't continue if we have no variables to plot.
+
+    if (statePlotVars().size() == 0) {
+      return;
+    }
+
+    Real dPlotFileTime0 = amrex::second();
+    const std::string& pltfile = amrex::Concatenate(plot_slice_root,level_steps[0],file_name_digits);
+
+    if (verbose > 0) {
+	amrex::Print() << "PLOTFILE SLICE: file = " << pltfile << '\n';
+    }
+
+    if (record_run_info && ParallelDescriptor::IOProcessor()) {
+        runlog << "PLOTFILE SLICE: file = " << pltfile << '\n';
+    }
+
+  amrex::StreamRetry sretry(pltfile, abort_on_stream_retry_failure,
+                             stream_max_tries);
+
+  const std::string pltfileTemp(pltfile + ".temp");
+
+  while(sretry.TryFileOutput()) {
+    //
+    //  if either the pltfile or pltfileTemp exists, rename them
+    //  to move them out of the way.  then create pltfile
+    //  with the temporary name, then rename it back when
+    //  it is finished writing.  then stream retry can rename
+    //  it to a bad suffix if there were stream errors.
+    //
+
+    if (precreateDirectories) {    // ---- make all directories at once
+      amrex::UtilRenameDirectoryToOld(pltfile, false);      // dont call barrier
+      amrex::UtilCreateCleanDirectory(pltfileTemp, false);  // dont call barrier
+      for(int i(0); i <= finest_level; ++i) {
+	amr_level[i]->CreateLevelDirectory(pltfileTemp);
+      }
+      ParallelDescriptor::Barrier("Amr::writePlotFile:PCD");
+
+    } else {
+      amrex::UtilRenameDirectoryToOld(pltfile, false);     // dont call barrier
+      amrex::UtilCreateCleanDirectory(pltfileTemp, true);  // call barrier
+    }
+
+    std::string HeaderFileName(pltfileTemp + "/Header");
+
+    VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
+
+    std::ofstream HeaderFile;
+
+    HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
+
+    int old_prec(0);
+
+    if (ParallelDescriptor::IOProcessor()) {
+        //
+        // Only the IOProcessor() writes to the header file.
+        //
+        HeaderFile.open(HeaderFileName.c_str(), std::ios::out | std::ios::trunc |
+	                                        std::ios::binary);
+        if ( ! HeaderFile.good()) {
+            amrex::FileOpenFailed(HeaderFileName);
+	}
+        old_prec = HeaderFile.precision(15);
+    }
+
+    for (int k(0); k <= finest_level; ++k) {
+        amr_level[k]->writePlotFilePre(pltfileTemp, HeaderFile);
+    }
+
+    for (int k(0); k <= finest_level; ++k) {
+        amr_level[k]->writePlotFileSlice(pltfileTemp, HeaderFile);
+    }
+
+    for (int k(0); k <= finest_level; ++k) {
+        amr_level[k]->writePlotFilePost(pltfileTemp, HeaderFile);
+    }
+
+    if (ParallelDescriptor::IOProcessor()) {
+        HeaderFile.precision(old_prec);
+        if ( ! HeaderFile.good()) {
+            amrex::Error("Amr::writePlotFileSlice() failed");
+	}
+    }
+
+    last_plotfile = level_steps[0];
+
+    if (verbose > 0) {
+        const int IOProc        = ParallelDescriptor::IOProcessorNumber();
+        Real      dPlotFileTime = amrex::second() - dPlotFileTime0;
+
+        ParallelDescriptor::ReduceRealMax(dPlotFileTime,IOProc);
+
+	amrex::Print() << "Write plotfile slice  time = " << dPlotFileTime << "  seconds" << "\n\n";
+    }
+    ParallelDescriptor::Barrier("Amr::writePlotFileSlice::end");
+
+    if(ParallelDescriptor::IOProcessor()) {
+      std::rename(pltfileTemp.c_str(), pltfile.c_str());
+    }
+    ParallelDescriptor::Barrier("Renaming temporary plotfile.");
+    //
+    // the plotfile file now has the regular name
+    //
+
+  }  // end while
+
+  VisMF::SetHeaderVersion(currentVersion);
+  
+  BL_PROFILE_REGION_STOP("Amr::writePlotFileSlice()");
+}
+
+void
 Amr::writePlotFile ()
 {
     if ( ! Plot_Files_Output()) {
@@ -2618,6 +2749,11 @@ Amr::coarseTimeStep (Real stop_time)
         checkPoint();
     }
 
+    if (plot_slice_int > 0 && level_steps[0] % plot_slice_int == 0)
+    {
+        writePlotFileSlice();
+    }
+
 
     if (writePlotNow() || to_plot)
     {
@@ -3520,6 +3656,12 @@ Amr::initPltAndChk ()
 
     plot_int = -1;
     pp.query("plot_int",plot_int);
+
+    plot_slice_root = "pltSlice";
+    pp.query("plot_slice",plot_slice_root);
+
+    plot_slice_int = -1;
+    pp.query("plot_slice_int",plot_slice_int);
 
     plot_per = -1.0;
     pp.query("plot_per",plot_per);
