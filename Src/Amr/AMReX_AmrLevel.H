@@ -96,10 +96,16 @@ public:
     //! Do pre-plotfile work to avoid synchronizations while writing the amr hierarchy
     virtual void writePlotFilePre (const std::string& dir,
                                    std::ostream&      os);
+    virtual void writePlotFilePreSlice (const std::string& dir,
+                                   std::ostream&      os);
+
 
     //! Do post-plotfile work to avoid synchronizations while writing the amr hierarchy
     virtual void writePlotFilePost (const std::string& dir,
                                     std::ostream&      os);
+    virtual void writePlotFilePostSlice (const std::string& dir,
+                                    std::ostream&      os);
+
 
     /**
     * \brief Write small plot file stuff to specified directory.  
