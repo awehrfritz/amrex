@@ -249,6 +249,7 @@ public:
 
     //! Write the plot file to be used for visualization.
     virtual void writePlotFile ();
+    virtual void writePlotFileSlice ();
     int stepOfLastPlotFile () const noexcept {return last_plotfile;}
     //! Write the small plot file to be used for visualization.
     virtual void writeSmallPlotFile ();
@@ -429,6 +430,7 @@ protected:
     int              last_plotfile;   //!< Step number of previous plotfile.
     int              last_smallplotfile;   //!< Step number of previous small plotfile.
     int              plot_int;        //!< How often plotfile (# of time steps)
+    int              plot_slice_int;        //!< How often plotfile slices (# of time steps)
     Real             plot_per;        //!< How often plotfile (in units of time)
     Real             plot_log_per;    //!< How often plotfile (in units of log10(time))
     int              small_plot_int;  //!< How often small plotfile (# of time steps)
@@ -438,6 +440,7 @@ protected:
     int              file_name_digits; //!< How many digits to use in the plotfile and checkpoint names
     int              message_int;     //!< How often checking messages touched by user, such as "stop_run"
     std::string      plot_file_root;  //!< Root name of plotfile.
+    std::string      plot_slice_root;  //!< Root name of plotfile slice.
     std::string      small_plot_file_root;  //!< Root name of small plotfile.
 
     int              which_level_being_advanced; //!< Only >=0 if we are in Amr::timeStep(level,...)
