@@ -951,7 +951,7 @@ void
     }
 
     for (int k(0); k <= finest_level; ++k) {
-        amr_level[k]->writePlotFilePreSlice(pltfileTemp, HeaderFile);
+        amr_level[k]->writePlotFileSlicePre(pltfileTemp, HeaderFile);
     }
 
     for (int k(0); k <= finest_level; ++k) {
@@ -959,7 +959,7 @@ void
     }
 
     for (int k(0); k <= finest_level; ++k) {
-        amr_level[k]->writePlotFilePostSlice(pltfileTemp, HeaderFile);
+        amr_level[k]->writePlotFileSlicePost(pltfileTemp, HeaderFile);
     }
 
     if (ParallelDescriptor::IOProcessor()) {
