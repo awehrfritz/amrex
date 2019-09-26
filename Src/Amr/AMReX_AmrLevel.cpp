@@ -356,7 +356,7 @@ AmrLevel::writePlotFilePre (const std::string& dir,
 
 void
 AmrLevel::writePlotFileSlicePre (const std::string& dir,
-                            std::ostream&      os)
+                                 std::ostream&      os)
 {
 }
 
@@ -369,7 +369,7 @@ AmrLevel::writePlotFilePost (const std::string& dir,
 
 void
 AmrLevel::writePlotFileSlicePost (const std::string& dir,
-                             std::ostream&      os)
+                                  std::ostream&      os)
 {
 }
 
