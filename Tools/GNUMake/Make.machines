@@ -22,6 +22,12 @@ ifeq ($(host_name), $(findstring $(host_name), $(CCSE_MACHINES)))
   which_computer := $(host_name)
 endif
 
+ifeq ($(findstring raijin, $(host_name)), raijin)
+  which_site := nci
+  which_computer := raijin
+endif
+
+
 ifeq ($(findstring cori, $(NERSC_HOST)), cori)
   which_site := nersc
   which_computer := cori
