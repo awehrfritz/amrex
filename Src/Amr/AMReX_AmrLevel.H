@@ -91,6 +91,7 @@ public:
 
     virtual void writePlotFileSlice (const std::string& dir,
                                 std::ostream&      os,
+                                int maxlevSlice,
                                 VisMF::How         how = VisMF::NFiles);
 
     //! Do pre-plotfile work to avoid synchronizations while writing the amr hierarchy

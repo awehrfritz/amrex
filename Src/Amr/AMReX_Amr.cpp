@@ -889,6 +889,19 @@ void
     if (statePlotVars().size() == 0) {
       return;
     }
+    ParmParse pp("ht");
+    Vector<int> SBoxind;
+    pp.getarr("SliceBox",SBoxind,0,2.0*BL_SPACEDIM);
+    Box SliceBox(IntVect(AMREX_D_DECL(SBoxind[0],SBoxind[1],SBoxind[2])),
+       IntVect(AMREX_D_DECL(SBoxind[BL_SPACEDIM],SBoxind[BL_SPACEDIM+1],SBoxind[BL_SPACEDIM+2])));
+    int maxlevSlice = 0;
+    for (int i=1; i <= finest_level; i++) {
+        SliceBox.refine(2);
+        BoxArray ba_slice = amrex::intersect(amr_level[i]->grids,SliceBox);
+        if(ba_slice.size() > 0) maxlevSlice=maxlevSlice+1;
+     }
+
+
 
     Real dPlotFileTime0 = amrex::second();
     const std::string& pltfile = amrex::Concatenate(plot_slice_root,level_steps[0],file_name_digits);
@@ -954,8 +967,9 @@ void
         amr_level[k]->writePlotFileSlicePre(pltfileTemp, HeaderFile);
     }
 
-    for (int k(0); k <= finest_level; ++k) {
-        amr_level[k]->writePlotFileSlice(pltfileTemp, HeaderFile);
+    for (int k(0); k <= maxlevSlice; ++k) {
+        amr_level[k]->writePlotFileSlice(pltfileTemp, HeaderFile, maxlevSlice);
+
     }
 
     for (int k(0); k <= finest_level; ++k) {

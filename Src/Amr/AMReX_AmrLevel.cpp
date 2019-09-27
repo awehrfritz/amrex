@@ -147,6 +147,7 @@ AmrLevel::AmrLevel (Amr&            papa,
 void
 AmrLevel::writePlotFileSlice (const std::string& dir,
                          std::ostream&      os,
+                         int maxlevSlice,
                          VisMF::How         how) {
 
 
@@ -355,7 +356,7 @@ AmrLevel::writePlotFilePre (const std::string& dir,
 }
 
 void
-AmrLevel::writePlotFilePreSlice (const std::string& dir,
+AmrLevel::writePlotFileSlicePre (const std::string& dir,
                             std::ostream&      os)
 {
 }
@@ -368,7 +369,7 @@ AmrLevel::writePlotFilePost (const std::string& dir,
 }
 
 void
-AmrLevel::writePlotFilePostSlice (const std::string& dir,
+AmrLevel::writePlotFileSlicePost (const std::string& dir,
                              std::ostream&      os)
 {
 }
