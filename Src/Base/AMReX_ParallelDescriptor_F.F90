@@ -29,6 +29,13 @@ module amrex_paralleldescriptor_module
        integer(c_int) amrex_fi_pd_ioprocessor_number
      end function amrex_fi_pd_ioprocessor_number
 
+     subroutine amrex_fi_pd_bcast_i (x, n, root) bind(c)
+       import
+       implicit none
+       integer(c_int) :: x(*)
+       integer(c_int), intent(in), value :: n, root
+     end subroutine amrex_fi_pd_bcast_i
+
      subroutine amrex_fi_pd_bcast_r (x, n, root) bind(c)
        import
        implicit none
@@ -44,6 +51,10 @@ module amrex_paralleldescriptor_module
   end interface
 
   interface amrex_pd_bcast
+     module procedure amrex_pd_bcast_i
+     module procedure amrex_pd_bcast_iv
+     module procedure amrex_pd_bcast_i2v
+     module procedure amrex_pd_bcast_i3v
      module procedure amrex_pd_bcast_r
      module procedure amrex_pd_bcast_rv
      module procedure amrex_pd_bcast_r2v
@@ -73,6 +84,61 @@ contains
   integer function amrex_pd_ioprocessor_number ()
     amrex_pd_ioprocessor_number = amrex_fi_pd_ioprocessor_number()
   end function amrex_pd_ioprocessor_number
+
+  subroutine amrex_pd_bcast_i (x, a_root)
+    integer, target :: x
+    integer, intent(in), optional :: a_root
+    integer :: root
+    integer :: i(1)
+    if (present(a_root)) then
+       root = a_root
+    else
+       root = amrex_pd_ioprocessor_number()
+    end if
+    if (root .eq. amrex_pd_myproc()) then
+       i(1) = x
+    end if
+    call amrex_fi_pd_bcast_i(i, 1, root)
+    if (root .ne. amrex_pd_myproc()) then
+       x = i(1)
+    end if
+  end subroutine amrex_pd_bcast_i
+
+  subroutine amrex_pd_bcast_iv (x, a_root)
+    integer :: x(:)
+    integer, intent(in), optional :: a_root
+    integer :: root
+    if (present(a_root)) then
+       root = a_root
+    else
+       root = amrex_pd_ioprocessor_number()
+    end if
+    call amrex_fi_pd_bcast_i(x, size(x), root)
+  end subroutine amrex_pd_bcast_iv
+
+  subroutine amrex_pd_bcast_i2v (x, a_root)
+    integer :: x(:,:)
+    integer, intent(in), optional :: a_root
+    integer :: root
+    if (present(a_root)) then
+       root = a_root
+    else
+       root = amrex_pd_ioprocessor_number()
+    end if
+    call amrex_fi_pd_bcast_i(x, size(x), root)
+  end subroutine amrex_pd_bcast_i2v
+
+  subroutine amrex_pd_bcast_i3v (x, a_root)
+    integer :: x(:,:,:)
+    integer, intent(in), optional :: a_root
+    integer :: root
+    if (present(a_root)) then
+       root = a_root
+    else
+       root = amrex_pd_ioprocessor_number()
+    end if
+    call amrex_fi_pd_bcast_i(x, size(x), root)
+  end subroutine amrex_pd_bcast_i3v
 
   subroutine amrex_pd_bcast_r (x, a_root)
     real(amrex_real), target :: x
