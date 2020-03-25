@@ -1,15 +1,15 @@
 #
-# For NCI machines: Raijin
+# For NCI machines: Gadi
 #
 
 # Set the default node architecture to NONE
 NCI_NODE_ARCH ?= NONE
-NCI_NODE_ARCHS := SANDYBRIDGE BROADWELL SKYLAKE SKYLAKE-512 SKYLAKE-512-ZMM KNL
+NCI_NODE_ARCHS := SKYLAKE SKYLAKE-512 SKYLAKE-512-ZMM CASCADELAKE CASCADELAKE-ZMM
 
-ifneq ($(which_computer),$(filter $(which_computer),raijin))
+ifneq ($(which_computer),$(filter $(which_computer),gadi))
   $(error Unknown NCI computer, $(which_computer))
 else
-  $(info Loading compiler settings for Raijin@NCI)
+  $(info Loading compiler settings for Gadi@NCI)
   ifneq ($(NCI_NODE_ARCH), $(findstring $(NCI_NODE_ARCH), $(NCI_NODE_ARCHS)))
     $(warning Unknown node architecture: $(NCI_NODE_ARCH))
   else
@@ -21,20 +21,6 @@ CFLAGS   := $(subst -O2,-O3,$(CFLAGS))
 CXXFLAGS := $(subst -O2,-O3,$(CXXFLAGS))
 FFLAGS   := $(subst -O2,-O3,$(FFLAGS))
 F90FLAGS := $(subst -O2,-O3,$(F90FLAGS))
-
-ifeq ($(NCI_NODE_ARCH),SANDYBRIDGE)
-  CFLAGS   += -xSANDYBRIDGE
-  CXXFLAGS += -xSANDYBRIDGE
-  FFLAGS   += -xSANDYBRIDGE
-  F90FLAGS += -xSANDYBRIDGE
-endif
-
-ifeq ($(NCI_NODE_ARCH),BROADWELL)
-  CFLAGS   += -xBROADWELL -fma
-  CXXFLAGS += -xBROADWELL -fma
-  FFLAGS   += -xBROADWELL -fma
-  F90FLAGS += -xBROADWELL -fma
-endif
 
 ifeq ($(NCI_NODE_ARCH),SKYLAKE)
   CFLAGS   += -xSKYLAKE -fma
@@ -57,11 +43,18 @@ ifeq ($(NCI_NODE_ARCH),SKYLAKE-512-ZMM)
   F90FLAGS += -xSKYLAKE-AVX512 -fma -qopt-zmm-usage=high
 endif
 
-ifeq ($(NCI_NODE_ARCH),KNL)
-  CFLAGS   += -xMIC-AVX512
-  CXXFLAGS += -xMIC-AVX512
-  FFLAGS   += -xMIC-AVX512
-  F90FLAGS += -xMIC-AVX512
+ifeq ($(NCI_NODE_ARCH),CASCADELAKE)
+  CFLAGS   += -xCASCADELAKE -fma
+  CXXFLAGS += -xCASCADELAKE -fma
+  FFLAGS   += -xCASCADELAKE -fma
+  F90FLAGS += -xCASCADELAKE -fma
+endif
+
+ifeq ($(NCI_NODE_ARCH),CASCADELAKE-ZMM)
+  CFLAGS   += -xCASCADELAKE -fma -qopt-zmm-usage=high
+  CXXFLAGS += -xCASCADELAKE -fma -qopt-zmm-usage=high
+  FFLAGS   += -xCASCADELAKE -fma -qopt-zmm-usage=high
+  F90FLAGS += -xCASCADELAKE -fma -qopt-zmm-usage=high
 endif
 
 archSuffix += .$(NCI_NODE_ARCH)
