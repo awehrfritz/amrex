@@ -430,7 +430,6 @@ protected:
     int              last_plotfile;   //!< Step number of previous plotfile.
     int              last_smallplotfile;   //!< Step number of previous small plotfile.
     int              plot_int;        //!< How often plotfile (# of time steps)
-    int              plot_slice_int;        //!< How often plotfile slices (# of time steps)
     Real             plot_per;        //!< How often plotfile (in units of time)
     Real             plot_log_per;    //!< How often plotfile (in units of log10(time))
     int              small_plot_int;  //!< How often small plotfile (# of time steps)
@@ -440,8 +439,12 @@ protected:
     int              file_name_digits; //!< How many digits to use in the plotfile and checkpoint names
     int              message_int;     //!< How often checking messages touched by user, such as "stop_run"
     std::string      plot_file_root;  //!< Root name of plotfile.
-    std::string      plot_slice_root;  //!< Root name of plotfile slice.
     std::string      small_plot_file_root;  //!< Root name of small plotfile.
+
+    int              plot_slice_int;  //!< How often plotfile slices (# of time steps)
+    IntVect          plot_slice_lo;   //!< Lower indices for slice box
+    IntVect          plot_slice_hi;   //!< Upper indices for slice box
+    std::string      plot_slice_root; //!< Root name of plotfile slice.
 
     int              which_level_being_advanced; //!< Only >=0 if we are in Amr::timeStep(level,...)
 
