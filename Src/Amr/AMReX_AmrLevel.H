@@ -69,7 +69,7 @@ public:
     void SetLevelDirectoryCreated(bool ldc) noexcept { levelDirectoryCreated = ldc; }
     /**
     * \brief A string written as the first item in writePlotFile() at
-    * level zero. 
+    * level zero.
     * It is so we can distinguish between different types of
     * plot files.
     * This default "HyperCLaw-V1.1" is for VisIt software and some of our
@@ -88,29 +88,29 @@ public:
     virtual void writePlotFile (const std::string& dir,
                                 std::ostream&      os,
                                 VisMF::How         how = VisMF::NFiles);
-
     virtual void writePlotFileSlice (const std::string& dir,
-                                std::ostream&      os,
-                                int maxlevSlice,
-                                VisMF::How         how = VisMF::NFiles);
+                                     std::ostream&      os,
+                                     const amrex::Box&  SliceBox,
+                                     const int          f_lev,
+                                     VisMF::How         how = VisMF::NFiles);
 
     //! Do pre-plotfile work to avoid synchronizations while writing the amr hierarchy
     virtual void writePlotFilePre (const std::string& dir,
                                    std::ostream&      os);
     virtual void writePlotFileSlicePre (const std::string& dir,
-                                   std::ostream&      os);
+                                        std::ostream&      os);
 
 
     //! Do post-plotfile work to avoid synchronizations while writing the amr hierarchy
     virtual void writePlotFilePost (const std::string& dir,
                                     std::ostream&      os);
     virtual void writePlotFileSlicePost (const std::string& dir,
-                                    std::ostream&      os);
+                                         std::ostream&      os);
 
 
     /**
-    * \brief Write small plot file stuff to specified directory.  
-    * Unlike writePlotFile, this is NOT a pure virtual function 
+    * \brief Write small plot file stuff to specified directory.
+    * Unlike writePlotFile, this is NOT a pure virtual function
     * so implementation by derived classes is optional.
     */
     virtual void writeSmallPlotFile (const std::string& dir,
@@ -214,7 +214,7 @@ public:
     virtual  int okToContinue () { return 1; }
     /**
     * \brief Should I regrid with this level as base level?
-    * This test is only evaluated if regrid_int > 0 and 
+    * This test is only evaluated if regrid_int > 0 and
     * level_count >= regrid_int as well. Defaults to true.
     */
     virtual  int okToRegrid ();
@@ -357,7 +357,7 @@ public:
                                                 int       dcomp,
                                                 int       ncomp,
                                                 Real      time) const;
-    /** 
+    /**
     * \brief Called in grid_places after other tagging routines to modify
     * the list of tagged points.  Default implementation does nothing.
     */
@@ -380,7 +380,7 @@ public:
     /**
     * \brief Returns one the TimeLevel enums.
     * Asserts that time is between AmrOldTime and AmrNewTime.
-    */ 
+    */
     TimeLevel which_time (int  state_indx, Real time) const noexcept;
 
     //! Does the AmrLevel want Amr to write a plotfile now?
@@ -390,7 +390,7 @@ public:
     virtual bool writeSmallPlotNow ();
 
 #ifdef AMREX_PARTICLES
-    //! This function can be called from the parent 
+    //! This function can be called from the parent
     virtual void particle_redistribute (int lbase = 0, bool a_init = false) {;}
 #endif
 
@@ -411,7 +411,7 @@ public:
                               int       scomp,
                              int       ncomp,
                              int       dcomp=0);
-    
+
 #ifdef AMREX_USE_EB
     static void SetEBMaxGrowCells (int nbasic, int nvolume, int nfull) noexcept {
         m_eb_basic_grow_cells = nbasic;
@@ -440,7 +440,7 @@ protected:
     AmrLevel& operator = (const AmrLevel&) = delete;
 
     //! Common code used by all constructors.
-    void finishConstructor (); 
+    void finishConstructor ();
 
     //
     // The Data.
@@ -612,7 +612,7 @@ class FillPatchIterator
     RegionGraph* get_fsrcGraph(){return fsrcGraph;}
 #endif
 
-    
+
   private:
     //
     // Disallowed.
@@ -1030,26 +1030,26 @@ public:
 
 
     void completeRegionGraphs()
-    { 
+    {
       //std::cout << "Completing RGs ";
-      
+
       if(destGraph != NULL)
-        { 
+        {
           //std::cout << destGraph->graphID << " ";
            destGraph->finalizeRegionGraph();
         }
       if(csrcGraph != NULL)
-        { 
+        {
           //std::cout << csrcGraph->graphID << " ";
           csrcGraph->finalizeRegionGraph();
         }
       if(fsrcGraph != NULL)
-        { 
+        {
           //std::cout << fsrcGraph->graphID << " ";
           fsrcGraph->finalizeRegionGraph();
         }
       if(m_rg_crse_patch != NULL)
-        { 
+        {
           //std::cout << m_rg_crse_patch->graphID << " ";
           m_rg_crse_patch->finalizeRegionGraph();
         }

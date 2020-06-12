@@ -144,16 +144,14 @@ AmrLevel::AmrLevel (Amr&            papa,
 
     finishConstructor();
 }
+
 void
 AmrLevel::writePlotFileSlice (const std::string& dir,
-                         std::ostream&      os,
-                         int maxlevSlice,
-                         VisMF::How         how) {
-
-
- }
-
-
+                              std::ostream&      os,
+                              const Box&         SliceBox,
+                              const int          f_lev,
+                              VisMF::How         how)
+{}
 
 void
 AmrLevel::writePlotFile (const std::string& dir,

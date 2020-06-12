@@ -889,16 +889,23 @@ void
       return;
     }
 
-    Box SliceBox(plot_slice_lo, plot_slice_hi);
-    int maxlevSlice = 0;
-    for (int i=1; i <= finest_level; i++) {
-        SliceBox.refine(2);
-        BoxArray ba_slice = amrex::intersect(amr_level[i]->grids,SliceBox);
-        if(ba_slice.size() > 0) maxlevSlice=maxlevSlice+1;
+    // Determine the maximum level of the slice box at the current time instance
+    int mx_lev_slice = 0;
+    {
+        Box SliceBox(plot_slice_lo, plot_slice_hi);
+        for (int i=1; i <= finest_level; i++) {
+            SliceBox.refine(ref_ratio[i-1]);
+            BoxArray ba_slice = amrex::intersect(amr_level[i]->grids, SliceBox);
+            if(ba_slice.size() > 0) {
+                mx_lev_slice++;
+            }
+        }
     }
 
     Real dPlotFileTime0 = amrex::second();
-    const std::string& pltfile = amrex::Concatenate(plot_slice_root,level_steps[0],file_name_digits);
+    const std::string& pltfile = amrex::Concatenate(plot_slice_root,
+                                                    level_steps[0],
+                                                    file_name_digits);
 
     if (verbose > 0) {
         amrex::Print() << "PLOTFILE SLICE: file = " << pltfile << '\n';
@@ -951,15 +958,20 @@ void
             old_prec = HeaderFile.precision(15);
         }
 
-        for (int k(0); k <= finest_level; ++k) {
+        for (int k(0); k <= mx_lev_slice; ++k) {
             amr_level[k]->writePlotFileSlicePre(pltfileTemp, HeaderFile);
         }
 
-        for (int k(0); k <= maxlevSlice; ++k) {
-            amr_level[k]->writePlotFileSlice(pltfileTemp, HeaderFile, maxlevSlice);
+        Box SliceBox(plot_slice_lo, plot_slice_hi);
+        for (int k(0); k <= mx_lev_slice; ++k) {
+            amr_level[k]->writePlotFileSlice(pltfileTemp,
+                                             HeaderFile,
+                                             SliceBox,
+                                             mx_lev_slice);
+            SliceBox.refine(ref_ratio[k]);
         }
 
-        for (int k(0); k <= finest_level; ++k) {
+        for (int k(0); k <= mx_lev_slice; ++k) {
             amr_level[k]->writePlotFileSlicePost(pltfileTemp, HeaderFile);
         }
 
