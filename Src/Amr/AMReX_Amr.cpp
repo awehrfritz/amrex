@@ -968,7 +968,9 @@ void
                                              HeaderFile,
                                              SliceBox,
                                              mx_lev_slice);
-            SliceBox.refine(ref_ratio[k]);
+            if (k < mx_lev_slice) {
+                SliceBox.refine(ref_ratio[k]);
+            }
         }
 
         for (int k(0); k <= mx_lev_slice; ++k) {
@@ -3687,13 +3689,25 @@ Amr::initPltAndChk ()
         const Box& domain = Geom(0).Domain();
         const IntVect& domain_lo = domain.smallEnd();
         const IntVect& domain_hi = domain.bigEnd();
+        bool print_plot_slice = false;
         for (int i = 0; i < AMREX_SPACEDIM; i++)
         {
             if (   plot_slice_lo[i] < 0 || plot_slice_lo[i] < domain_lo[i]) {
                 plot_slice_lo[i] = domain_lo[i];
+                print_plot_slice = true;
             }
             if (   plot_slice_hi[i] < 0 || plot_slice_hi[i] > domain_hi[i]) {
                 plot_slice_hi[i] = domain_hi[i];
+                print_plot_slice = true;
+            }
+        }
+        // If slice box dimensions were corrected, print the new indices
+        if (print_plot_slice)
+        {
+            if (ParallelDescriptor::IOProcessor()) {
+                amrex::Warning("Warning: slice box dimensions were changed!");
+                amrex::Print() << "    amr.plot_slice_lo = " << plot_slice_lo << "\n"
+                               << "    amr.plot_slice_hi = " << plot_slice_hi << "\n";
             }
         }
     }
