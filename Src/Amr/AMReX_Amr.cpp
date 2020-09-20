@@ -1360,6 +1360,11 @@ Amr::init (Real strt_time,
             writePlotFile();
         }
 
+        // FIXME: This leads to a memory allocation error and the run would hang
+        // if(plot_slice_int > 0) {
+        //     writePlotFileSlice();
+        // }
+
         if (small_plot_int > 0 || small_plot_per > 0 || small_plot_log_per > 0)
 	        writeSmallPlotFile();
 
@@ -2695,37 +2700,45 @@ Amr::coarseTimeStep (Real stop_time)
     int to_stop       = 0;
     int to_checkpoint = 0;
     int to_plot       = 0;
+    int to_plot_slice = 0;
     int to_small_plot = 0;
     if (message_int > 0 && level_steps[0] % message_int == 0) {
-	if (ParallelDescriptor::IOProcessor())
-	{
-	    FILE *fp;
-	    if ((fp=fopen("dump_and_continue","r")) != 0)
-	    {
-		remove("dump_and_continue");
-		to_checkpoint = 1;
-		fclose(fp);
-	    }
-	    else if ((fp=fopen("stop_run","r")) != 0)
-	    {
-		remove("stop_run");
-		to_stop = 1;
-		fclose(fp);
-	    }
-	    else if ((fp=fopen("dump_and_stop","r")) != 0)
-	    {
-		remove("dump_and_stop");
-		to_checkpoint = 1;
-		to_stop = 1;
-		fclose(fp);
-	    }
+        if (ParallelDescriptor::IOProcessor())
+        {
+            FILE *fp;
+            if ((fp=fopen("dump_and_continue","r")) != 0)
+            {
+                remove("dump_and_continue");
+                to_checkpoint = 1;
+                fclose(fp);
+            }
+            else if ((fp=fopen("stop_run","r")) != 0)
+            {
+                remove("stop_run");
+                to_stop = 1;
+                fclose(fp);
+            }
+            else if ((fp=fopen("dump_and_stop","r")) != 0)
+            {
+                remove("dump_and_stop");
+                to_checkpoint = 1;
+                to_stop = 1;
+                fclose(fp);
+            }
 
-	    if ((fp=fopen("plot_and_continue","r")) != 0)
-	    {
-		remove("plot_and_continue");
-		to_plot = 1;
-		fclose(fp);
-	    }
+            if ((fp=fopen("plot_and_continue","r")) != 0)
+            {
+                remove("plot_and_continue");
+                to_plot = 1;
+                fclose(fp);
+            }
+
+            if ((fp=fopen("plot_slice_and_continue","r")) != 0)
+            {
+                remove("plot_slice_and_continue");
+                to_plot_slice = 1;
+                fclose(fp);
+            }
 
             if ((fp=fopen("small_plot_and_continue","r")) != 0)
             {
@@ -2733,18 +2746,19 @@ Amr::coarseTimeStep (Real stop_time)
                 to_small_plot = 1;
                 fclose(fp);
             }
-	}
-        int packed_data[4];
-	packed_data[0] = to_stop;
-	packed_data[1] = to_checkpoint;
+        }
+        int packed_data[5];
+        packed_data[0] = to_stop;
+        packed_data[1] = to_checkpoint;
         packed_data[2] = to_plot;
-        packed_data[3] = to_small_plot;
-	ParallelDescriptor::Bcast(packed_data, 4, ParallelDescriptor::IOProcessorNumber());
-	to_stop = packed_data[0];
-	to_checkpoint = packed_data[1];
+        packed_data[3] = to_plot_slice;
+        packed_data[4] = to_small_plot;
+        ParallelDescriptor::Bcast(packed_data, 5, ParallelDescriptor::IOProcessorNumber());
+        to_stop = packed_data[0];
+        to_checkpoint = packed_data[1];
         to_plot = packed_data[2];
-        to_small_plot = packed_data[3];
-
+        to_plot_slice = packed_data[3];
+        to_small_plot = packed_data[4];
     }
 
     if(to_stop == 1 && to_checkpoint == 0) {  // prevent main from writing files
@@ -2754,20 +2768,20 @@ Amr::coarseTimeStep (Real stop_time)
 
     if (to_checkpoint && write_plotfile_with_checkpoint) {
       to_plot = 1;
+      to_plot_slice = 1;
       to_small_plot = 1;
     }
 
     if ((check_int > 0 && level_steps[0] % check_int == 0) || check_test == 1
-	|| to_checkpoint)
+        || to_checkpoint)
     {
         checkPoint();
     }
 
-    if (plot_slice_int > 0 && level_steps[0] % plot_slice_int == 0)
+    if (plot_slice_int > 0 && level_steps[0] % plot_slice_int == 0 || to_plot_slice)
     {
         writePlotFileSlice();
     }
-
 
     if (writePlotNow() || to_plot)
     {
@@ -2794,7 +2808,7 @@ Amr::coarseTimeStep (Real stop_time)
           {
             amrex::ErrorStream() << "Stopped by user w/o checkpoint" << std::endl;
           }
-	}
+        }
     }
 
 
